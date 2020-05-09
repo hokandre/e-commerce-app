@@ -6,7 +6,7 @@ npx sequelize-cli model:generate --name Customer --attributes name:STRING,birhtd
 
 npx sequelize-cli model:generate --name Adress --attributes street:STRING, postal_code:INTEGER, country:STRING, city:STRING
 
-npx sequelize-cli model:generate --name Product --atributes name:STRING, stock:INTEGER
+npx sequelize-cli model:generate --name Product --attributes name:STRING, stock:INTEGER
 
 npx sequelize-cli model:generate --name Category_Product --attributes name:STRING
 
