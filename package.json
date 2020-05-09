@@ -1,0 +1,43 @@
+{
+  "name": "e-commerce",
+  "version": "1.0.0",
+  "description": "portofolio project",
+  "main": "index.js",
+  "directories": {
+    "test": "NODE_ENV=test mocha --exit"
+  },
+  "dependencies": {
+    "bcrypt": "^4.0.1",
+    "chai": "^4.2.0",
+    "chai-http": "^4.3.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "npm-run-all": "^4.1.5",
+    "pg": "^8.1.0",
+    "sequelize": "^5.21.7",
+    "sequelize-cli": "^5.5.1"
+  },
+  "devDependencies": {
+    "mocha": "^7.1.2"
+  },
+  "scripts": {
+    "docker:build": "docker build -t=e-commerce-project .",
+    "docker:up": "docker-compose up",
+    "start": "npm-run-all docker:up",
+    "test": "NODE_ENV=test mocha --exit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hokandre/e-commerce-app.git"
+  },
+  "keywords": [
+    "e-commerce"
+  ],
+  "author": "andre h",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hokandre/e-commerce-app/issues"
+  },
+  "homepage": "https://github.com/hokandre/e-commerce-app#readme"
+}

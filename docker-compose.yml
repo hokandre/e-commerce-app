@@ -1,0 +1,15 @@
+version : "3"
+services :
+  webapp:
+    build : .
+    ports : [8080:8080]
+    links :
+      - postgresDB
+  postgresDB :
+    image : postgres:12
+    restart : always
+    volumes: 
+      - ./data:/var/lib/postgresql/data
+    environment :
+      POSTGRES_PASSWORD: RC4sd3v3rtc%
+    ports : [5433:5432]
