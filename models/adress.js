@@ -5,9 +5,11 @@ module.exports = (sequelize, DataTypes) => {
     postal_code: DataTypes.INTEGER,
     country: DataTypes.STRING,
     city: DataTypes.STRING
-  }, {});
+  }, {
+    underscored: true
+  });
   Adress.associate = function(models) {
-    // associations can be defined here
+    models.Adress.belongsTo(models.Customer);
   };
   return Adress;
 };
