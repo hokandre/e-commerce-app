@@ -1,14 +1,16 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const review = sequelize.define('review', {
+  const Review = sequelize.define('Review', 
+  {
     star: DataTypes.INTEGER,
-    review: DataTypes.STRING
+    Review: DataTypes.STRING
   }, {
     underscored: true
   });
-  review.associate = function(models) {
-    models.Review.belongsTo(model.Customer);
-    models.Review.belongsTo(model.Product);
+
+  Review.associate = function(models) {
+    models.Review.belongsTo(models.Customer);
+    models.Review.belongsTo(models.Product);
   };
-  return review;
+  return Review;
 };

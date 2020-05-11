@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
         }
       }
     },
-    birhtday:{ 
+    birthday:{ 
       type : DataTypes.DATEONLY, 
       allowNull : false,
       validate : {
@@ -72,18 +72,14 @@ module.exports = (sequelize, DataTypes) => {
     },
     password: { 
       type :  DataTypes.STRING(255),
+      allowNull : {
+        args : false,
+        msg : "Password cannot be null value"
+      },
       validate : {
-        is: {
-          args : /^[0-9a-f]{64}$/i,
-          msg : "password contains invalid caracter"
-        },
         min : {
           args : [8],
           msg : "password must be min 8 letter"
-        },
-        notNull : {
-          args : true,
-          msg : "password cannot be null value"
         },
         notEmpty : {
           args : true,
@@ -114,8 +110,16 @@ module.exports = (sequelize, DataTypes) => {
       }
     }
   }, {
+    hooks : {
+      afterCreate : (instance, options) => {
+        sequelize.models.Adress.create({
+          
+        })
+      }
+    },
     underscored: true
   });
+
   Customer.associate = function(models) {
     models.Customer.hasMany(models.Adress);
     models.Customer.hasMany(models.Transaction);

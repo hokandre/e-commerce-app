@@ -6,6 +6,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     underscored: true
   });
+  
   Product.associate = function(models) {
     models.Product.belongsTo(models.Category_Product);
 

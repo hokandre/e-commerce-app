@@ -10,10 +10,14 @@
     "bcrypt": "^4.0.1",
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
+    "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "helmet": "^3.22.0",
+    "http-errors": "^1.7.3",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.25.3",
+    "multer": "^1.4.2",
     "npm-run-all": "^4.1.5",
     "pg": "^8.1.0",
     "sequelize": "^5.21.7",
@@ -26,7 +30,7 @@
   "scripts": {
     "docker:build": "docker build -t=e-commerce-project .",
     "docker:up": "docker-compose up",
-    "start": "npm-run-all docker:up",
+    "start": "NODE_ENV=development node index.js",
     "test": "NODE_ENV=test mocha --exit"
   },
   "repository": {

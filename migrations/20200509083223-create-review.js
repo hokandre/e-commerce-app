@@ -11,14 +11,14 @@ module.exports = {
       customer_id: {
         type: Sequelize.INTEGER,
           references: {
-              model: 'Customers',
+              model: 'customers',
               key: 'id'
         }
       },
       product_id: {
         type: Sequelize.INTEGER,
           references: {
-              model: 'Products',
+              model: 'products',
               key: 'id'
         }
       },
@@ -28,11 +28,11 @@ module.exports = {
       review: {
         type: Sequelize.STRING
       },
-      createdAt: {
+      created_at: {
         allowNull: false,
         type: Sequelize.DATE
       },
-      updatedAt: {
+      updated_at: {
         allowNull: false,
         type: Sequelize.DATE
       }
