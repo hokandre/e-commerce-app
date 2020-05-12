@@ -4,7 +4,7 @@ module.exports = {
             errors : []
         };
 
-        if(error.type.toLowerCase() == 'sequelize'){
+        if(error.type.toLowerCase() == 'sequelize'){            
             error.errors.forEach(validationErrorItem =>{
                 errorFormat.errors.push({
                     property : validationErrorItem.path,

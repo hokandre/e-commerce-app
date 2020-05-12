@@ -1,3 +1,5 @@
+const { v4 } = require("uuid");
+
 'use strict';
 module.exports = (sequelize, DataTypes) => {
   const Product = sequelize.define('Product', {
@@ -5,6 +7,12 @@ module.exports = (sequelize, DataTypes) => {
     stock: DataTypes.INTEGER
   }, {
     underscored: true
+  }, {
+    hooks : {
+      beforeCreate : (product, options) => {
+        product.id = v4();
+      }
+    }
   });
   
   Product.associate = function(models) {

@@ -1,3 +1,5 @@
+const { v4 } = require("uuid");
+
 'use strict';
 module.exports = (sequelize, DataTypes) => {
   const Transaction = sequelize.define('Transaction', {
@@ -5,6 +7,12 @@ module.exports = (sequelize, DataTypes) => {
     amount: DataTypes.INTEGER
   }, {
     underscored: true
+  }, {
+    hooks : {
+      beforeCreate : (transaction , options) => {
+        transaction.id = v4();
+      }
+    }
   });
   Transaction.associate = function(models) {
     models.Transaction.belongsTo(models.Customer);

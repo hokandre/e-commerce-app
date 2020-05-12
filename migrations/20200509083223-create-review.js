@@ -1,22 +1,23 @@
+const uuid = require('uuid');
+
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.createTable('reviews', {
       id: {
         allowNull: false,
-        autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.UUID
       },
       customer_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
           references: {
               model: 'customers',
               key: 'id'
         }
       },
       product_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
           references: {
               model: 'products',
               key: 'id'

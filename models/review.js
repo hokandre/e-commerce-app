@@ -1,3 +1,5 @@
+const { v4 } = require("uuid");
+
 'use strict';
 module.exports = (sequelize, DataTypes) => {
   const Review = sequelize.define('Review', 
@@ -6,6 +8,12 @@ module.exports = (sequelize, DataTypes) => {
     Review: DataTypes.STRING
   }, {
     underscored: true
+  },{
+    hooks : {
+      beforeCreate : (review, options) => {
+        review.id = v4();
+      }
+    }
   });
 
   Review.associate = function(models) {

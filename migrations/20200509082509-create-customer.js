@@ -1,12 +1,13 @@
+const uuid = require('uuid');
+
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.createTable('customers', {
       id: {
         allowNull: false,
-        autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.UUID
       },
       name: {
         type: Sequelize.STRING
@@ -37,6 +38,13 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
+    },{
+      indexes: [
+        { 
+          unique: true, 
+          fields: ["email","username"]
+        }
+      ]
     });
   },
   down: (queryInterface, Sequelize) => {

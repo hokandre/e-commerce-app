@@ -1,4 +1,9 @@
+const { v4 } = require("uuid");
+
 'use strict';
+const moment = require('moment');
+const FORMAT_DATE = process.env.DATE_FORMAT;
+
 module.exports = (sequelize, DataTypes) => {
   
   const Customer = sequelize.define('Customer', {
@@ -42,17 +47,28 @@ module.exports = (sequelize, DataTypes) => {
         msg : "email address already in use"
       },
       validate : {
-        isEmail : {
+        isUnique : async function(value, next) {
+          const user = this;
+          const userRegistered = await Customer.findOne({
+            where : { email : value}
+          })
+           
+          if(userRegistered && !user.id) return  next("email address already in use");
+
+          next();
+
+        },
+        notEmpty : {
           args : true,
-          msg : "email's format is incorrect"
+          msg : "email must be filled"
         },
         notNull : {
           args : true,
           msg : "email cannot be null value"
         },
-        notEmpty : {
+        isEmail : {
           args : true,
-          msg : "email must be filled"
+          msg : "email's format is incorrect"
         }
       }
     },
@@ -72,18 +88,13 @@ module.exports = (sequelize, DataTypes) => {
     },
     password: { 
       type :  DataTypes.STRING(255),
-      allowNull : {
-        args : false,
-        msg : "Password cannot be null value"
-      },
       validate : {
-        min : {
-          args : [8],
-          msg : "password must be min 8 letter"
-        },
-        notEmpty : {
-          args : true,
-          msg : "password must be filled"
+        minCaracter : function(value, next){
+          if(value.length == 0) return next('password must be filled');
+
+          if(value.length < 8) return next('password must be min 8 letter');
+
+          next();
         }
       }
     },
@@ -95,13 +106,27 @@ module.exports = (sequelize, DataTypes) => {
       },
       allowNull : false,
       validate : {
-        notNull : {
-          args : true,
-          msg : "username cannot be null value"
-        },
         notEmpty : {
           args : true,
           msg : "username must be filled"
+        },
+        is : {
+          args : /^[a-z0-9]+$/i,
+          msg : "username just can use alpabeticnumber"
+        },
+        isUnique : async function(value, next) {
+          const user = this;
+          let registeredUser = await Customer.findOne({
+            where : { username : value}
+          })
+            
+          if(registeredUser && !user.id) return  next("username already in use");
+
+          next();
+        },
+        notNull : {
+          args : true,
+          msg : "username cannot be null value"
         },
         min : {
           args : [8],
@@ -110,15 +135,31 @@ module.exports = (sequelize, DataTypes) => {
       }
     }
   }, {
+    indexes: [
+      {
+        fields: ['email','username'],
+        unique: true
+      }
+    ],
     hooks : {
-      afterCreate : (instance, options) => {
-        sequelize.models.Adress.create({
-          
-        })
+      beforeValidate : (customer, options) => {
+        let isValid = moment(customer.dataValues.birthday).isValid();
+        
+        if(isValid) moment(customer.dataValues.birthday).format(FORMAT_DATE);
+
+      },
+      beforeCreate : (customer, options) => {
+        customer.id = v4();
+
+      },
+      afterCreate : (customer, option) => {
+        
       }
     },
     underscored: true
   });
+
+ 
 
   Customer.associate = function(models) {
     models.Customer.hasMany(models.Adress);
