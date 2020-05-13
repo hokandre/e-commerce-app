@@ -3,6 +3,7 @@ const { v4 } = require("uuid");
 'use strict';
 const moment = require('moment');
 const FORMAT_DATE = process.env.DATE_FORMAT;
+const { hashPassword } = require("../helper/bcrypt");
 
 module.exports = (sequelize, DataTypes) => {
   
@@ -53,7 +54,7 @@ module.exports = (sequelize, DataTypes) => {
             where : { email : value}
           })
            
-          if(userRegistered && !user.id) return  next("email address already in use");
+          if(userRegistered && (user.id != userRegistered.id)) return  next("email address already in use");
 
           next();
 
@@ -106,31 +107,29 @@ module.exports = (sequelize, DataTypes) => {
       },
       allowNull : false,
       validate : {
-        notEmpty : {
-          args : true,
-          msg : "username must be filled"
-        },
         is : {
           args : /^[a-z0-9]+$/i,
-          msg : "username just can use alpabeticnumber"
+          msg : "username just can use alpanumeric"
         },
         isUnique : async function(value, next) {
           const user = this;
-          let registeredUser = await Customer.findOne({
+          let userRegistered = await Customer.findOne({
             where : { username : value}
           })
             
-          if(registeredUser && !user.id) return  next("username already in use");
-
+          if(userRegistered && (user.id != userRegistered.id)) return  next("username already in use");
           next();
         },
         notNull : {
           args : true,
           msg : "username cannot be null value"
         },
-        min : {
-          args : [8],
-          msg : "username must be min 8 letter"
+        minCaracter : function(value, next){
+          if(value.length == 0) return next("username must be filled");
+
+          if(value.length < 8) return next('username must be min 8 caracter');
+
+          next();
         }
       }
     }
@@ -148,12 +147,34 @@ module.exports = (sequelize, DataTypes) => {
         if(isValid) moment(customer.dataValues.birthday).format(FORMAT_DATE);
 
       },
-      beforeCreate : (customer, options) => {
-        customer.id = v4();
+      beforeCreate : async (customer, options) => {
+        if(!customer.id) customer.id = v4();
+
+        const currentPassword = customer.dataValues.password;
+        const oldPassword = customer._previousDataValues.password;
+     
+        if(currentPassword !== oldPassword ) {
+          try{
+            let hashedPassword = await hashPassword(currentPassword);
+            customer.password = hashedPassword;
+          }catch(err){
+            throw new Error("something broken while hashing password");
+          }
+        }
 
       },
-      afterCreate : (customer, option) => {
-        
+      beforeUpdate : async(customer, options) => {
+        const currentPassword = customer.dataValues.password;
+        const oldPassword = customer._previousDataValues.password;
+    
+        if(currentPassword !== oldPassword ) {
+          try{
+            let hashedPassword = await hashPassword(currentPassword);
+            customer.password = hashedPassword;
+          }catch(err){
+            throw new Error("something broken while hashing password");
+          }
+        }
       }
     },
     underscored: true

@@ -10,6 +10,7 @@ chai.use(chaiHttp);
 chai.use(sinonChai);
 
 const { Customer } = require("../models");
+const bcrypt = require("../helper/bcrypt");
 
 const image = fs.readFileSync(__dirname+'/test.png');
 const image2MB = fs.readFileSync(__dirname+'/test-2-mb.jpg');
@@ -30,7 +31,7 @@ describe('CUSTOMER INTEGRATION TEST :', () => {
             console.log(error);
         }
     })
-
+    
     it('POST /customer should return new customer',  (done) => {
         let newCustomerData = {
             name : 'andre h',
@@ -40,6 +41,8 @@ describe('CUSTOMER INTEGRATION TEST :', () => {
             password : '12345678',
             username : 'hokandre'
         }
+        const hashPasswordStub = sinon.stub(bcrypt, 'hashPassword');
+        const hookBeforeCreatedStub = sinon.stub(Customer, 'beforeCreate');
 
         chai.request(app)
             .post('/customer')
@@ -70,8 +73,10 @@ describe('CUSTOMER INTEGRATION TEST :', () => {
                     fs.unlinkSync(response.body.avatar);
                 }
 
-                //expect(afterCreateHookSpy).to.have.been.calledOnce;
-
+                hookBeforeCreatedStub.resolves('ok');
+                hashPasswordStub.resolves('ok');
+                hookBeforeCreatedStub.restore();
+                hashPasswordStub.restore();
                 done();
             })
     })
@@ -334,7 +339,7 @@ describe('CUSTOMER INTEGRATION TEST :', () => {
 
     it('POST /customer should return error username not unique', async () => {
        
-        let newCustomerData = {
+        let newCustomerData1 = {
             name : 'Andre',
             birthday : '1998-11-09',
             email : 'hokandre@1998.com',
@@ -342,11 +347,20 @@ describe('CUSTOMER INTEGRATION TEST :', () => {
             password : '12345678',
             username : 'hokandre'
         }
-        const customer1 = await Customer.create(newCustomerData);
+
+        let newCustomerData2 = {
+            name : 'Andre',
+            birthday : '1998-11-09',
+            email : 'hokandre@gmail.com',
+            gender : 'F',
+            password : '12345678',
+            username : 'hokandre'
+        }
+        const customer1 = await Customer.create(newCustomerData1);
 
         const response = await chai.request(app)
             .post('/customer')
-            .send(newCustomerData);
+            .send(newCustomerData2);
 
         expect(response).to.have.status(400);
         expect(response.body.properties[0]).to.have.property('property');
@@ -356,16 +370,15 @@ describe('CUSTOMER INTEGRATION TEST :', () => {
     
     })
 
-    it('POST /customer should return error username just contain alpanumeric', async () => {
+    it('POST /customer should return error username min 8 caracter', async () => {
         let newCustomerData = {
             name : 'Andre',
             birthday : '1998-11-09',
             email : 'hokandre@1998.com',
             gender : 'F',
             password : '12345678',
-            username : 'hok andre'
+            username : 'hokan'
         }
-        const customer1 = await Customer.create(newCustomerData);
 
         const response = await chai.request(app)
             .post('/customer')
@@ -374,9 +387,186 @@ describe('CUSTOMER INTEGRATION TEST :', () => {
         expect(response).to.have.status(400);
         expect(response.body.properties[0]).to.have.property('property');
         expect(response.body.properties[0]).to.have.property('message');
-        expect(response.body.properties[0].message).to.equal('username just can use alpabeticnumbe');
+        expect(response.body.properties[0].message).to.equal('username must be min 8 caracter');
         expect(response.body.properties[0].property).to.equal('username');
     })
+
+    it('PUT /customer should return updated customer data', async () =>{
+        let customerData = {
+            name : 'Andre',
+            birthday : '1998-11-09',
+            email : 'hokandre@1998.com',
+            gender : 'F',
+            password : '12345678',
+            username : 'hokandre',
+            avatar : 'default.jpg'
+        }
+
+        const hashPasswordStub = sinon.stub(bcrypt, 'hashPassword');
+        
+        let customer = await Customer.create(customerData);
+
+        //update
+        customerData.name = "Andre Hok";
+        customerData.birthday = "1998-11-10";
+        customer.gender = "M";
+
+        customerData.id = customer.id;
+
+
+        const response = await chai.request(app)
+            .put(`/customer/${customerData.id}`)
+            .type("form")
+            .field("name", customerData.name)
+            .field("birthday", customerData.birthday)
+            .field("email", customerData.email)
+            .field("gender", customerData.gender)
+            .field("username", customerData.username)
+            .attach('avatar', image, 'test.png')
+
+        expect(response).to.have.status(200);
+        expect(response.body).to.have.property('id');
+        expect(response.body).to.have.property('avatar');
+        expect(response.body).to.not.have.property('password');
+        expect(response.body.name).to.equal(customerData.name);
+        expect(response.body.birthday).to.equal(customerData.birthday);
+        expect(response.body.email).to.equal(customerData.email);
+        expect(response.body.gender).to.equal(customerData.gender);
+        expect(response.body.username).to.equal(customerData.username);
+
+        let isFileExits = fs.existsSync(response.body.avatar);
+        expect(isFileExits).to.equal(true);
+
+        if(isFileExits){
+            fs.unlinkSync(response.body.avatar);
+        }
+
+        expect(hashPasswordStub.called).equal(false);
+        
+        hashPasswordStub.restore();
+    })
+
+    
+
+    it('PUT /customer change password', async () =>{
+        let customerData = {
+            name : 'Andre',
+            birthday : '1998-11-09',
+            email : 'hokandre@1998.com',
+            gender : 'F',
+            password : '12345678',
+            username : 'hokandre',
+            avatar : 'default.jpg',
+            password : 'AKU MEREKA '
+        }
+
+        const hashPasswordStub = sinon.stub(bcrypt, 'hashPassword');
+        
+        let customer = await Customer.create(customerData);
+        //update
+        customerData.name = "Andre Hok";
+        customerData.birthday = "1998-11-10";
+        customerData.password = "DUNIA INI"
+        customerData.id = customer.id;
+
+
+        const response = await chai.request(app)
+            .put(`/customer/${customerData.id}`)
+            .type("form")
+            .field("name", customerData.name)
+            .field("birthday", customerData.birthday)
+            .field("email", customerData.email)
+            .field("gender", customerData.gender)
+            .field("username", customerData.username)
+            .field("password", customerData.password)
+            .attach('avatar', image, 'test.png')
+
+        expect(response).to.have.status(200);
+        expect(response.body).to.have.property('id');
+        expect(response.body).to.have.property('avatar');
+        expect(response.body).to.not.have.property('password');
+        expect(response.body.name).to.equal(customerData.name);
+        expect(response.body.birthday).to.equal(customerData.birthday);
+        expect(response.body.email).to.equal(customerData.email);
+        expect(response.body.gender).to.equal(customerData.gender);
+        expect(response.body.username).to.equal(customerData.username);
+        let isFileExits = fs.existsSync(response.body.avatar);
+        expect(isFileExits).to.equal(true);
+
+        if(isFileExits){
+            fs.unlinkSync(response.body.avatar);
+        }
+
+        hashPasswordStub.resolves('ok');
+        
+        hashPasswordStub.restore();
+    })
+
+    /*
+    it('PUT /customer change avatar', async () =>{
+        let customerData = {
+            name : 'Andre',
+            birthday : '1998-11-09',
+            email : 'hokandre@1998.com',
+            gender : 'F',
+            username : 'hokandre',
+            avatar : 'default.jpg'
+        }
+
+        const hashPasswordStub = sinon.stub(bcrypt, 'hashPassword');
+        
+        let customer = await Customer.create(customerData);
+
+        //update
+        customerData.name = "Andre Hok";
+        customerData.birthday = "1998-11-10";
+        customerData.id = customer;
+
+
+        const response = await chai.request(app)
+            .put(`/customer/${customerData.id}`)
+            .type("form")
+            .field("name", customerData.name)
+            .field("birthday", customerData.birthday)
+            .field("email", customerData.email)
+            .field("gender", customerData.gender)
+            .field("username", customerData.username)
+            .attach('avatar', image, 'test.png')
+
+        expect(response).to.have.status(200);
+        expect(response.body).to.have.property('id');
+        expect(response.body).to.have.property('avatar');
+        expect(response.body).to.not.have.property('password');
+        expect(response.body.name).to.equal(newCustomerData.name);
+        expect(response.body.birthday).to.equal(newCustomerData.birthday);
+        expect(response.body.email).to.equal(newCustomerData.email);
+        expect(response.body.gender).to.equal(newCustomerData.gender);
+        expect(response.body.username).to.equal(newCustomerData.username);
+
+        let isFileExits = fs.existsSync(response.body.avatar);
+        expect(isFileExits).to.equal(true);
+
+        if(isFileExits){
+            fs.unlinkSync(response.body.avatar);
+        }
+
+        hashPasswordStub.resolves('ok');
+        
+        hashPasswordStub.restore();
+    })*/
+    /*
+    it('PUT /customer should return 204 no content', async () =>{
+        
+        let fakeId = '123';
+
+        const response = await chai.request(app)
+            .put(`/customer/${fakeId}`)
+            .type("form")
+
+        console.log("\x1b[33m", response.body);
+        expect(response).to.have.status(204);
+    })
+    */
 })
 
 
